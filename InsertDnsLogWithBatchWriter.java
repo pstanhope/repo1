@@ -112,7 +112,7 @@ public class InsertDnsLogWithBatchWriter {
 						  TableNotFoundException {
 	if (args.length < 6) {
 	    System.out
-		.println("Usage: accumulo examples-simplejar accumulo.examples.helloworld.InsertDnsLogWithBatchWriter <instance name> <zoo keepers> <username> <password> <tableName> <rowkey> <start> <maxrecords>");
+		.println("Usage: accumulo examples-simplejar accumulo.examples.helloworld.InsertDnsLogWithBatchWriter <instance name> <zoo keepers> <username> <password> <tableName> <logFile> <rowkey> <start> <maxrecords>");
 	    System.exit(1);
 	}
     
@@ -123,12 +123,17 @@ public class InsertDnsLogWithBatchWriter {
 	String tableName = args[4];
 	String records = "1000000";
 	String rowkey = "1382375700";
+	String logFile = "1382375700";
 	int maxRecords = 0;
-	if (args.length > 5)
-	    rowkey = args[5];
+
+	if (args.length > 5) {
+	    logFile = args[5];
+
+	if (args.length > 6) {
+	    rowkey = args[6];
 
 	int start = 0;
-	if (args.length > 6) {
+	if (args.length > 7) {
 	    try {
 		start = Integer.parseInt(args[6]);
 	    } catch(Exception e) {
@@ -193,7 +198,7 @@ public class InsertDnsLogWithBatchWriter {
 	int cracked = 0;
 
 	try {
-	    in = new BufferedReader(new FileReader("/home/ubuntu/"+rowkey));
+	    in = new BufferedReader(new FileReader(logFile));
 	    while (in.ready()) {
 		String logLine = in.readLine();
 		counter++;
