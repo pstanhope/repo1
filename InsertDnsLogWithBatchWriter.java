@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.accumulo.examples.simple.helloworld;
+// package com.dyn;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -233,8 +235,9 @@ public class InsertDnsLogWithBatchWriter {
 	final Text r_clientip = new Text("clientip");
 	final Text r_error = new Text("error");
 	
-	HashMap uniqueFQDN = new HashMap();
+	HashMap uniqueTLD = new HashMap();
 	HashMap uniqueClient = new HashMap();
+	HashMap uniqueLines = new HashMap();
 	Integer errors = 0;
 	int counter = 0;
 	int skips = 0;
@@ -256,8 +259,13 @@ public class InsertDnsLogWithBatchWriter {
 	// Count & Remember unique client ips
 	final Text colf_ports = new Text("ports");
 
+	// Count & Remember tld id
+	final Text colf_tldid = new Text("tldid");
+
 	// Timestamp is always our rowkey. We store the node that we found things in 
 	final Text row_counts = new Text(rowkey);
+
+	int tld_id = 0;
 
 	String node = null;
 
@@ -319,15 +327,27 @@ public class InsertDnsLogWithBatchWriter {
 			    // Remeber that we've had a query for this TLD
 			    m.put(colf_zones, new Text(tld), one);
 
-			    Integer fqdn_cnt = (Integer)uniqueFQDN.get(tld);
-			    if (fqdn_cnt == null) {
-                                fqdn_cnt = 0;
-				uniqueFQDN.put(tld, 1);
+			    Integer cur_tld_id = (Integer)uniqueTLD.get(tld);
+			    if (cur_tld_id == null) {
+				cur_tld_id = tld_id++;
+				uniqueTLD.put(tld, cur_tld_id);
+				uniqueLines.put(tld, 1);
 				// Only count first time we encounter it
 				m.put(colf_counts, r_fqdns, one);
+
+				// Remember our TLDID. This should be known outside of this. Doing it this
+				// way to get estimate of cost of storage.
+				final String str_tld_id = String.format("%s_id", tld);
+				final Text col_tld_id = new Text(str_tld_id);
+				final String str_tld_id_val = String.format("%d", cur_tld_id);
+				final Value val_tld_id = new Value(str_tld_id_val.getBytes());
+				m.put(colf_zones, col_tld_id, val_tld_id);
+
 			    } else {
-                                // Increase our remembered counter ... we'll use it for storing details about a domain
-				uniqueFQDN.put(tld, fqdn_cnt+1);
+
+				Integer line_cnt = (Integer)uniqueLines.get(tld);
+				line_cnt++;
+				uniqueLines.put(tld, line_cnt);
 
 				// Count unique client IPs
 				if (uniqueClient.get(client) == null) {
@@ -345,7 +365,15 @@ public class InsertDnsLogWithBatchWriter {
 				// Remember per rrtype per fqdn counts (N rrtype columns)
 				if (rrtype_details) {
 				    m.put(colf_details, new Text(String.format("%s_%s", tld, rrtype)), one);
-                                    m.put(colf_details, new Text(String.format("%s_%d", tld, fqdn_cnt)), new Value(logLine.getBytes()));
+				    
+				    // Column family per TLD containing the raw lines, one per column
+
+				    // TODO => Construct smaller raw log entry containing a more concise version of this raw data.
+				    // For example, we don't care about tld, because we know it. Nor do we care about a second
+				    // granuality timestamp because it's not useful. Nor do we care about process name.
+
+				    final String line = String.format("fra01 %s %s %s %s - %s", parts[6],parts[9],parts[10],parts[11],parts[13]);
+                                    m.put(new Text(String.format("%d", cur_tld_id)), new Text(String.format("%d", line_cnt)), new Value(line.getBytes()));
 				    // Count & Remember unique details that we encounter in per 
 				    // mDetails.put(colf_details, new Text("client"), new Value(client.getBytes()));
 				    // mDetails.put(colf_details, new Text("fqdn"), new Value(fqdn.getBytes()));
@@ -463,8 +491,8 @@ public class InsertDnsLogWithBatchWriter {
 	    System.out.printf("Ignore  %d\n", ignores);
 	    System.out.printf("Skips   %d\n", skips);
 	    System.out.printf("Errors  %d\n", errors);
-	    System.out.printf("FQDNs   %d\n", uniqueFQDN.size());
-	    System.out.printf("Client  %s\n", uniqueClient.size());
+	    System.out.printf("TLDs    %d\n", uniqueTLD.size());
+	    System.out.printf("Clients %s\n", uniqueClient.size());
 
 	    /*
 	    Mutation m = new Mutation(row_counts);
