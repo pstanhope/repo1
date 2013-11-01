@@ -183,18 +183,25 @@ public class InsertDnsLogWithBatchWriter {
 	    System.out.printf("Added SummingCombiner for 'counts'\n");
 
 	    // Accumulate overall per zone counts
-	    final IteratorSetting iterZones = new IteratorSetting (11, "zones", SummingCombiner.class);
+	    final IteratorSetting iterZones = new IteratorSetting (2, "zones", SummingCombiner.class);
 	    SummingCombiner.setColumns(iterZones, Collections.singletonList(new IteratorSetting.Column("zones")));
 	    SummingCombiner.setEncodingType(iterZones, SummingCombiner.Type.STRING);
 	    connector.tableOperations().attachIterator(tableName, iterZones);
 	    System.out.printf("Added SummingCombiner for 'zones'\n");
 
 	    // Accumulate overall per client counts
-	    final IteratorSetting iterClients = new IteratorSetting (11, "clients", SummingCombiner.class);
+	    final IteratorSetting iterClients = new IteratorSetting (3, "clients", SummingCombiner.class);
 	    SummingCombiner.setColumns(iterClients, Collections.singletonList(new IteratorSetting.Column("clients")));
 	    SummingCombiner.setEncodingType(iterClients, SummingCombiner.Type.STRING);
 	    connector.tableOperations().attachIterator(tableName, iterClients);
 	    System.out.printf("Added SummingCombiner for 'clients'\n");
+
+	    // Accumulate overall per port counts
+	    final IteratorSetting iterPorts = new IteratorSetting (4, "ports", SummingCombiner.class);
+	    SummingCombiner.setColumns(iterPorts, Collections.singletonList(new IteratorSetting.Column("ports")));
+	    SummingCombiner.setEncodingType(iterPorts, SummingCombiner.Type.STRING);
+	    connector.tableOperations().attachIterator(tableName, iterPorts);
+	    System.out.printf("Added SummingCombiner for 'ports'\n");
 
 	}
 	
@@ -243,8 +250,11 @@ public class InsertDnsLogWithBatchWriter {
 	// Count & Remember details per zones that we encounter.
 	final Text colf_details = new Text("details");
 	
-	// Count & Remember details per zones that we encounter.
+	// Count & Remember unique client ips
 	final Text colf_clients = new Text("clients");
+
+	// Count & Remember unique client ips
+	final Text colf_ports = new Text("ports");
 
 	// Timestamp is always our rowkey. We store the node that we found things in 
 	final Text row_counts = new Text(rowkey);
@@ -279,12 +289,19 @@ public class InsertDnsLogWithBatchWriter {
 			// 12 - 
 			// 13 (204.13.250.29)
 			node = parts[3];
-			String client = parts[6];
-			String fqdn = stripChars(parts[7],"():'");
-			String query = parts[9] + " " + parts[10] + " " + parts[11];
-			String rrtype = parts[11];
-			String answer = parts[13];
+			final String client_port = parts[6];
+			String client = null;
+			String port = null;
+			final String fqdn = stripChars(parts[7],"():'");
+			final String query = parts[9] + " " + parts[10] + " " + parts[11];
+			final String rrtype = parts[11];
+			final String answer = parts[13];
 			// System.out.printf("%10d Node=%s Client=%s FQDN=%s RRType=%s Answer=%s\n", counter, node, client, fqdn, rrtype, answer);
+
+			// Cleanup the client/port
+			int portStart = client_port.indexOf("#");
+			client = client_port.substring(0, portStart);
+			port = client_port.substring(portStart+1);
 
 			Mutation m = new Mutation(row_counts);
 
@@ -294,7 +311,6 @@ public class InsertDnsLogWithBatchWriter {
 
 			// Remember the node that we processed this record for
 			m.put(colf_counts, new Text(node), one);
-
 
 			// Remember domain (in a TLD)
 			String tld = getTopLevelDomain(fqdn, logLine);
@@ -317,8 +333,11 @@ public class InsertDnsLogWithBatchWriter {
 				    m.put(colf_counts, r_clientip, one);
 				}
 
-				// Count total per clientip
-				m.put(colf_clients, r_clientip, one);
+				// Count total per client ip
+				m.put(colf_clients, new Text(client), one);
+
+				// Count total per client port
+				m.put(colf_ports, new Text(port), one);
 
 				// Remember per rrtype per fqdn counts (N rrtype columns)
 				if (rrtype_details) {
