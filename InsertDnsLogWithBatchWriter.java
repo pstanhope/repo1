@@ -123,7 +123,7 @@ public class InsertDnsLogWithBatchWriter {
 	final byte[] pass = args[3].getBytes();
 	final String tableName = args[4];
 	String records = "1000000";
-	String rowkey = "1382375700";
+	String rowkey = null;
 	String logFile = "1382375700";
 	int maxRecords = 0;
 	boolean rrtype_details = false;
@@ -321,10 +321,13 @@ public class InsertDnsLogWithBatchWriter {
 
 			    Integer fqdn_cnt = (Integer)uniqueFQDN.get(tld);
 			    if (fqdn_cnt == null) {
+                                fqdn_cnt = 0;
 				uniqueFQDN.put(tld, 1);
 				// Only count first time we encounter it
 				m.put(colf_counts, r_fqdns, one);
 			    } else {
+                                // Increase our remembered counter ... we'll use it for storing details about a domain
+				uniqueFQDN.put(tld, fqdn_cnt+1);
 
 				// Count unique client IPs
 				if (uniqueClient.get(client) == null) {
@@ -342,6 +345,7 @@ public class InsertDnsLogWithBatchWriter {
 				// Remember per rrtype per fqdn counts (N rrtype columns)
 				if (rrtype_details) {
 				    m.put(colf_details, new Text(String.format("%s_%s", tld, rrtype)), one);
+                                    m.put(colf_details, new Text(String.format("%s_%d", tld, fqdn_cnt)), new Value(logLine.getBytes()));
 				    // Count & Remember unique details that we encounter in per 
 				    // mDetails.put(colf_details, new Text("client"), new Value(client.getBytes()));
 				    // mDetails.put(colf_details, new Text("fqdn"), new Value(fqdn.getBytes()));
