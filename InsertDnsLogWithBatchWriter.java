@@ -50,12 +50,371 @@ import java.util.Iterator;
 
 // guava-15.0.jar 
 // https://code.google.com/p/guava-libraries/
-import com.google.common.net.InternetDomainName;
-import com.google.common.collect.ImmutableList;
+// import com.google.common.net.InternetDomainName;
+// import com.google.common.collect.ImmutableList;
 
 public class InsertDnsLogWithBatchWriter {
 
     private static String getTopLevelDomain(String host, String rawLogLine) {
+	
+	// http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1
+	boolean isSingle = false;
+	String[] parts = host.split("\\.");
+	int partsLen = parts.length;
+
+	if (partsLen == 0) {
+	    return host;
+	}
+
+	if (parts[partsLen-1].equals("com")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("net")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("org")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("aero")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cat")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cc")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cf")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cg")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ch")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cn")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("coop")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cv")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("cz")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("de")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("dj")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("dk")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("edu")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("eu")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("fm")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ga")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gf")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gl")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gq")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gq")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gs")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gw")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("hm")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("hr")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("info")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("jobs")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ke")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("kh")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("kw")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("li")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("lu")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("md")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("mh")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("mil")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("mobi")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("mq")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("mp")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ms")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("name")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ne")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("net")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("nl")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("nu")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("pm")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("post")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("si")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("sr")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("su")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tc")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("td")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tel")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tf")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tg")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tk")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("travel")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tv")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("va")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("vg")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("vu")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("wf")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("yt")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("xxx")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("camera")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("clothing")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("lighting")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("singles")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ventures")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("voyage")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("guru")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("holdings")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("equipment")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ventures")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("bike")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("estate")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tattoo")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("land")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("plumbing")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("contractors")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("sexy")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("uno")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("gallery")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("technology")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("reviews")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("guide")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("graphics")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("construction")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("onl")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("diamonds")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("kiwi")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("enterprises")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("today")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("futbol")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("photography")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("tips")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("directory")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("kitchen")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("kim")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("monash")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("wed")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("pink")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("ruhr")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("buzz")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("careers")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("shoes")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("career")) {
+	    isSingle = true;
+	}
+	else if (parts[partsLen-1].equals("otsuka")) {
+	    isSingle = true;
+	}
+
+	String result = null;
+	if (isSingle && partsLen > 1) {
+	    result = String.format("%s.%s",parts[partsLen-2], parts[partsLen-1]);
+	} else if (!isSingle) {
+	    if (parts.length > 2) {
+		result = String.format("%s.%s.%s",parts[partsLen-3], parts[partsLen-2], parts[partsLen-1]);
+	    } else if (parts.length > 1) {
+		// Is this an ERROR? Or we really don't care???
+		result = String.format("%s.%s", parts[partsLen-2], parts[partsLen-1]);
+	    } else {
+		// Is this an ERROR? Or we really don't care???
+		result = parts[partsLen-1];
+	    }
+	}
+	return result;
+
+	/*
+
 	try {
 	    // Why do we get these ??? :-(
 	    if (host.startsWith("https//")) {
@@ -87,6 +446,7 @@ public class InsertDnsLogWithBatchWriter {
 	    System.out.printf("--------------%s\n%s\n", e.getMessage(), rawLogLine);
 	}
 	return null;
+	*/
     }
 
     public static String stripChars(String input, String strip) {
@@ -274,7 +634,7 @@ public class InsertDnsLogWithBatchWriter {
 	    while (in.ready()) {
 		final String logLine = in.readLine();
 		counter++;
-		if (counter-start >= maxRecords) {
+		if (counter-start > maxRecords) {
 		    ignores++;
 		}
 		else if (counter < start) {
@@ -466,6 +826,7 @@ public class InsertDnsLogWithBatchWriter {
 			    }
 			} else {
 			    // Remeber that we've had a query for this TLD
+			    System.out.printf("%s => ERROR\n", fqdn);
 			    errors++;
 			    m.put(colf_counts, r_error, one);
 			}
