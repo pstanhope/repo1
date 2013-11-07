@@ -19,9 +19,8 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.accumulo</groupId>
-    <artifactId>accumulo-project</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
-    <relativePath>../../pom.xml</relativePath>
+    <artifactId>accumulo-examples</artifactId>
+    <version>1.5.0</version>
   </parent>
   <artifactId>accumulo-examples-simple</artifactId>
   <name>Simple Examples</name>
@@ -35,8 +34,8 @@
       <artifactId>accumulo-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
+      <groupId>org.apache.accumulo</groupId>
+      <artifactId>accumulo-minicluster</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -69,6 +68,11 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-tools</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
@@ -84,15 +88,6 @@
           <configuration>
             <!-- this is just an example. Leave it out. -->
             <skip>true</skip>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <configuration>
-            <excludes>
-              <exclude>src/main/resources/META-INF/services/org.apache.accumulo.core.util.shell.ShellExtension</exclude>
-            </excludes>
           </configuration>
         </plugin>
       </plugins>
