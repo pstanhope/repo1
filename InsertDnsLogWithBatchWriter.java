@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-package org.apache.accumulo.examples.simple.helloworld;
+// package org.apache.accumulo.examples.simple.helloworld;
+package com.dyn.accumulo;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -435,8 +436,7 @@ public class InsertDnsLogWithBatchWriter {
     public static void main(String[] args) throws AccumuloException, AccumuloSecurityException, MutationsRejectedException, TableExistsException, TableNotFoundException 
     {
 	if (args.length < 6) {
-	    System.out
-		.println("Usage: accumulo examples-simplejar accumulo.examples.helloworld.InsertDnsLogWithBatchWriter <instance name> <zoo keepers> <username> <password> <tableName> <logFile> <rowkey> <start> <maxrecords> <rrtype_details> <graph_details>");
+	    System.out.println("Usage: accumulo examples-simplejar accumulo.examples.helloworld.InsertDnsLogWithBatchWriter <instance name> <zoo keepers> <username> <password> <tableName> <logFile> <rowkey> <nodeid> <start> <maxrecords> <rrtype_details> <graph_details>");
 	    System.exit(1);
 	}
     
@@ -447,6 +447,7 @@ public class InsertDnsLogWithBatchWriter {
 	final String tableName = args[4];
 	String records = "1000000";
 	String rowkey = null;
+	String nodeid = null;
 	String logFile = "1382375700";
 	int maxRecords = 0;
 	boolean rrtype_details = false;
@@ -460,24 +461,28 @@ public class InsertDnsLogWithBatchWriter {
 	    rowkey = args[6];
 	}
 
-	int start = 0;
 	if (args.length > 7) {
+	    nodeid = args[7];
+	}
+
+	int start = 0;
+	if (args.length > 8) {
 	    try {
-		start = Integer.parseInt(args[7]);
+		start = Integer.parseInt(args[8]);
 	    } catch(Exception e) {
 		System.out.println("WARN: Invalid <START>, assuming 0");
 	    }
 	}
 
 	String maxrecords = "1000000";
-	if (args.length > 8)
-	    maxrecords = args[8];
-
 	if (args.length > 9)
-	    rrtype_details = args[9].equals("true");
-    
+	    maxrecords = args[9];
+
 	if (args.length > 10)
-	    graph_details = args[10].equals("true");
+	    rrtype_details = args[10].equals("true");
+    
+	if (args.length > 11)
+	    graph_details = args[11].equals("true");
     
 	Integer val = null;
 	try {
@@ -489,6 +494,7 @@ public class InsertDnsLogWithBatchWriter {
 
 	System.out.printf("logFile    => %s\n", logFile);
 	System.out.printf("rowKey     => %s\n", rowkey);
+	System.out.printf("nodeid     => %s\n", nodeid);
 	System.out.printf("start      => %d\n", start);
 	System.out.printf("maxRecords => %d\n", maxRecords);
 	System.out.printf("rrtypes    => %b\n", rrtype_details);
@@ -566,45 +572,39 @@ public class InsertDnsLogWithBatchWriter {
 	    }
 	
 	    BatchWriter bwGraph = null;
-
-	    /*
-	    System.out.printf("Creating MultiTableBatchWriter\n");
-	    final MultiTableBatchWriter mtbw = connector.createMultiTableBatchWriter(200000l, 300, 4);
-	    BatchWriter bw = mtbw.getBatchWriter(tableName);
-	    */
-	
-	    System.out.printf("Creating BatchWriter\n");
 	    BatchWriter bw = connector.createBatchWriter(tableName, 2000000l, 0, 4);
 
 	    if (graph_details) {
-		// bwGraph = mtbw.getBatchWriter(graphTable);
+		 bwGraph = connector.createBatchWriter(graphTable, 2000000l, 0, 4);
 	    }
     
 	    BufferedReader in = null;
-	    final Value one = new Value("1".getBytes());
-	    final Text r_query = new Text("query");
-	    final Text r_a = new Text("A");
-	    final Text r_aaaa = new Text("AAAA");
-	    final Text r_ptr = new Text("PTR");
-	    final Text r_txt = new Text("TXT");
-	    final Text r_srv = new Text("SRV");
-	    final Text r_soa = new Text("SOA");
-	    final Text r_spf = new Text("SPF");
-	    final Text r_mx = new Text("MX");
-	    final Text r_any = new Text("ANY");
-	    final Text r_ds = new Text("DS");
-	    final Text r_a6 = new Text("A6");
-	    final Text r_rrsig = new Text("RRSIG");
-	    final Text r_dnskey = new Text("DNSKEY");
-	    final Text r_ns = new Text("NS");
-	    final Text r_cname = new Text("CNAME");
-	    final Text r_naptr = new Text("NAPTR");
-	    final Text r_tkey = new Text("TKEY");
-	    final Text r_sshfp = new Text("SSHFP");
-	    final Text r_hinfo = new Text("HINFO");
-	    final Text r_fqdns = new Text("fqdns");
-	    final Text r_clientip = new Text("clientip");
-	    final Text r_error = new Text("error");
+	    final Value v_one = new Value("1".getBytes());
+	    final Text col_query = new Text("query");
+	    final Text col_a = new Text("A");
+	    final Text col_aaaa = new Text("AAAA");
+	    final Text col_ptr = new Text("PTR");
+	    final Text col_txt = new Text("TXT");
+	    final Text col_srv = new Text("SRV");
+	    final Text col_soa = new Text("SOA");
+	    final Text col_spf = new Text("SPF");
+	    final Text col_mx = new Text("MX");
+	    final Text col_any = new Text("ANY");
+	    final Text col_ds = new Text("DS");
+	    final Text col_a6 = new Text("A6");
+	    final Text col_rrsig = new Text("RRSIG");
+	    final Text col_dnskey = new Text("DNSKEY");
+	    final Text col_ns = new Text("NS");
+	    final Text col_cname = new Text("CNAME");
+	    final Text col_naptr = new Text("NAPTR");
+	    final Text col_tkey = new Text("TKEY");
+	    final Text col_sshfp = new Text("SSHFP");
+	    final Text col_hinfo = new Text("HINFO");
+	    final Text col_unknown = new Text("UNKNOWN");
+	    final Text col_fqdns = new Text("fqdns");
+	    final Text col_clientip = new Text("clientip");
+	    final Text col_error = new Text("error");
+	    final Text col_nodeid = new Text(nodeid);
 	
 	    HashMap uniqueTLD = new HashMap();
 	    HashMap uniqueClient = new HashMap();
@@ -630,10 +630,8 @@ public class InsertDnsLogWithBatchWriter {
 	    // Count & Remember unique client ips
 	    final Text colf_ports = new Text("ports");
 
-	    // Count & Remember tld id
-	    final Text colf_tldid = new Text("tldid");
-
 	    // Timestamp is always our rowkey. We store the node that we found things in 
+	    // TODO: We could get much more fine-grained on this (second within the 5 minute range, or millisecond). Current precision in log file doesn't allow this.
 	    final Text row_counts = new Text(rowkey);
 
 	    int tld_id = 0;
@@ -686,13 +684,13 @@ public class InsertDnsLogWithBatchWriter {
 
 			    // Emit the graph info if we're doing that type of processing
 			    if (graph_details) {
-				final Text answer_text = new Text(stripChars(answer, "()"));
-				final Text rrtype_text = new Text(rrtype);
-				final Text fqdn_text = new Text(fqdn);
-				Mutation mGraphFQDN = new Mutation(fqdn_text);
-				Mutation mGraphAnswer = new Mutation(answer_text);
-				mGraphFQDN.put(rrtype_text, answer_text, one);
-				mGraphAnswer.put(rrtype_text, fqdn_text, one);
+				final Text col_answer = new Text(stripChars(answer, "()"));
+				final Text colf_rrtype = new Text(rrtype);
+				final Text col_fqdn = new Text(fqdn);
+				Mutation mGraphFQDN = new Mutation(col_fqdn);
+				Mutation mGraphAnswer = new Mutation(col_answer);
+				mGraphFQDN.put(colf_rrtype, col_answer, v_one);
+				mGraphAnswer.put(colf_rrtype, col_fqdn, v_one);
 				bwGraph.addMutation(mGraphFQDN);
 				bwGraph.addMutation(mGraphAnswer);
 			    }
@@ -701,17 +699,17 @@ public class InsertDnsLogWithBatchWriter {
 
 			    // Track and remember counts for each unique record type that we answer for
 			    // All RRType Counter
-			    m.put(colf_counts, r_query, one);
+			    m.put(colf_counts, col_query, v_one);
 
 			    // Remember the node that we processed this record for
-			    m.put(colf_counts, new Text(node), one);
+			    m.put(colf_counts, col_nodeid, v_one);
 
 			    // Remember domain (in a TLD)
 			    String tld = getTopLevelDomain(fqdn, logLine);
 
 			    if (tld != null) {
 				// Remeber that we've had a query for this TLD
-				m.put(colf_zones, new Text(tld), one);
+				m.put(colf_zones, new Text(tld), v_one);
 
 				Integer cur_tld_id = (Integer)uniqueTLD.get(tld);
 				if (cur_tld_id == null) {
@@ -719,7 +717,7 @@ public class InsertDnsLogWithBatchWriter {
 				    uniqueTLD.put(tld, cur_tld_id);
 				    uniqueLines.put(tld, 1);
 				    // Only count first time we encounter it
-				    m.put(colf_counts, r_fqdns, one);
+				    m.put(colf_counts, col_fqdns, v_one);
 
 				    // Remember our TLDID. This should be known outside of this. Doing it this
 				    // way to get estimate of cost of storage.
@@ -739,122 +737,113 @@ public class InsertDnsLogWithBatchWriter {
 				    if (uniqueClient.get(client) == null) {
 					// Only count first time we encounter it
 					uniqueClient.put(client, 1);
-					m.put(colf_counts, r_clientip, one);
+					m.put(colf_counts, col_clientip, v_one);
 				    }
 
 				    // Count total per client ip
-				    m.put(colf_clients, client_text, one);
+				    m.put(colf_clients, client_text, v_one);
 
 				    // Count total per client port
-				    m.put(colf_ports, new Text(port), one);
+				    m.put(colf_ports, new Text(port), v_one);
 
 				    // Remember per rrtype per fqdn counts (N rrtype columns)
 				    if (rrtype_details) {
-					m.put(colf_details, new Text(String.format("%s_%s", tld, rrtype)), one);
+					m.put(colf_details, new Text(String.format("%s_%s", tld, rrtype)), v_one);
 				    
 					// Column family per TLD containing the raw lines, one per column
-
 					// TODO => Construct smaller raw log entry containing a more concise version of this raw data.
-					// For example, we don't care about tld, because we know it. Nor do we care about a second
-					// granuality timestamp because it's not useful. Nor do we care about process name.
-
 					final String line = String.format("fra01 %s %s %s %s - %s", parts[6],parts[9],parts[10],parts[11],parts[13]);
 					m.put(new Text(String.format("%d", cur_tld_id)), new Text(String.format("%d", line_cnt)), new Value(line.getBytes()));
-					// Count & Remember unique details that we encounter in per 
-					// mDetails.put(colf_details, new Text("client"), new Value(client.getBytes()));
-					// mDetails.put(colf_details, new Text("fqdn"), new Value(fqdn.getBytes()));
-					// mDetails.put(colf_details, new Text("reply"), new Value(answer.getBytes()));
-					// mDetails.put(colf_details, new Text("rrtype"), new Value(rrtype.getBytes()));
 				    }
 
 				    // A Record Counter
 				    if (rrtype.equals("A")) {
-					m.put(colf_counts, r_a, one);
+					m.put(colf_counts, col_a, v_one);
 				    }
 				    // AAAA Record Counter
 				    else if (rrtype.equals("AAAA")) {
-					m.put(colf_counts, r_aaaa, one);
+					m.put(colf_counts, col_aaaa, v_one);
 				    }
 				    // PTR Record Counter
 				    else if (rrtype.equals("PTR")) {
-					m.put(colf_counts, r_ptr, one);
+					m.put(colf_counts, col_ptr, v_one);
 				    }
 
 				    // TXT Record Counter
 				    else if (rrtype.equals("TXT")) {
-					m.put(colf_counts, r_txt, one);
+					m.put(colf_counts, col_txt, v_one);
 				    }
 				    // SRV Record Counter
 				    else if (rrtype.equals("SRV")) {
-					m.put(colf_counts, r_srv, one);
+					m.put(colf_counts, col_srv, v_one);
 				    }
 				    // SOA Record Counter
 				    else if (rrtype.equals("SOA")) {
-					m.put(colf_counts, r_soa, one);
+					m.put(colf_counts, col_soa, v_one);
 				    } 
 				    // SPF Record Counter
 				    else if (rrtype.equals("SPF")) {
-					m.put(colf_counts, r_spf, one);
+					m.put(colf_counts, col_spf, v_one);
 				    }
 				    // MX Record Counter
 				    else if (rrtype.equals("MX")) {
-					m.put(colf_counts, r_mx, one);
+					m.put(colf_counts, col_mx, v_one);
 				    }
 				    // ANY Record Counter
 				    else if (rrtype.equals("ANY")) {
-					m.put(colf_counts, r_any, one);
+					m.put(colf_counts, col_any, v_one);
 				    }
 				    // DS Record Counter
 				    else if (rrtype.equals("DS")) {
-					m.put(colf_counts, r_ds, one);
+					m.put(colf_counts, col_ds, v_one);
 				    }
 				    // A6 Record Counter
 				    else if (rrtype.equals("A6")) {
-					m.put(colf_counts, r_a6, one);
+					m.put(colf_counts, col_a6, v_one);
 				    }
 				    // RRSIG Record Counter
 				    else if (rrtype.equals("RRSIG")) {
-					m.put(colf_counts, r_rrsig, one);
+					m.put(colf_counts, col_rrsig, v_one);
 				    }
 				    // DNSKEY Record Counter
 				    else if (rrtype.equals("DNSKEY")) {
-					m.put(colf_counts, r_dnskey, one);
+					m.put(colf_counts, col_dnskey, v_one);
 				    }
 				    // NS Record Counter
 				    else if (rrtype.equals("NS")) {
-					m.put(colf_counts, r_ns, one);
+					m.put(colf_counts, col_ns, v_one);
 				    }
 				    // CNAME Record Counter
 				    else if (rrtype.equals("CNAME")) {
-					m.put(colf_counts, r_cname, one);
+					m.put(colf_counts, col_cname, v_one);
 				    }
 				    // NAPTR Record Counter
 				    else if (rrtype.equals("NAPTR")) {
-					m.put(colf_counts, r_naptr, one);
+					m.put(colf_counts, col_naptr, v_one);
 				    }
 				    // TKEY Record Counter
 				    else if (rrtype.equals("TKEY")) {
-					m.put(colf_counts, r_tkey, one);
+					m.put(colf_counts, col_tkey, v_one);
 				    }
 				    // SSHFP Record Counter
 				    else if (rrtype.equals("SSHFP")) {
-					m.put(colf_counts, r_sshfp, one);
+					m.put(colf_counts, col_sshfp, v_one);
 				    }
 				    // HINFO Record Counter
 				    else if (rrtype.equals("HINFO")) {
-					m.put(colf_counts, r_hinfo, one);
+					m.put(colf_counts, col_hinfo, v_one);
 				    }
 				    else {
+					// UNKNOWN Record Counts
 					System.out.printf("%s - WARN: Unknown Record %d\n", rrtype,counter);
+					m.put(colf_counts, col_unknown, v_one);
 				    }
-
-
 				}
 			    } else {
 				// Remeber that we've had a query for this TLD
 				System.out.printf("%s => ERROR\n", fqdn);
 				errors++;
-				m.put(colf_counts, r_error, one);
+				m.put(colf_counts, col_error, v_one);
 			    }
 
 			    bw.addMutation(m);
@@ -865,7 +854,6 @@ public class InsertDnsLogWithBatchWriter {
 			cracked++;
 			if (counter % 10000 == 0) {
 			    System.out.printf("Count %d\n", counter);
-			    // mtbw.flush();
 			    bw.flush();
 			}
 		    }
@@ -881,19 +869,13 @@ public class InsertDnsLogWithBatchWriter {
 		System.out.printf("Errors  %d\n", errors);
 		System.out.printf("TLDs    %d\n", uniqueTLD.size());
 		System.out.printf("Clients %s\n", uniqueClient.size());
-
-		/*
-		  Mutation m = new Mutation(row_counts);
-		  m.put(colf_counts, new Text(node), new Value(ByteBuffer.allocate(4).putInt(cracked).array()));
-		  bw.addMutation(m);
-		*/
-
 		if (in != null) { try { in.close(); } catch(Throwable t) { /* ensure close happens */ } }
 	    }
 
-	    // mtbw.close();
 	    bw.close();
-
+	    if (bwGraph != null) {
+		bwGraph.close();
+	    }
 	    try {
 
 		if (accumulo == null) {
