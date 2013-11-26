@@ -320,12 +320,14 @@ public class CrackDnsLog {
 			    // Get TLD
 			    String tld = getTopLevelDomain(fqdn, logLine);
 
-			    if (tld != null) {
+			    if (tld != null) {	
 				// Remember that we've had a query for this TLD
 				final Text col_tld = new Text(tld);
-				m.put(colf_zones, col_tld, v_one);
+				m.put(colf_counts, col_tld, v_one);
 
-				if (hostAggregates == true) {
+				// m.put(colf_zones, col_tld, v_one);
+
+				if (hostAggregates) {
 				    final Text col_fqdn = new Text(fqdn);
 				    m.put(col_tld, col_fqdn, v_one);
 				}
@@ -375,11 +377,11 @@ public class CrackDnsLog {
 				    
 					// Column family per TLD containing the raw lines, one per column
 					// TODO => Construct smaller raw log entry containing a more concise version of this raw data.
-					final String line = String.format("fra01 %s %s %s %s - %s", parts[6],parts[9],parts[10],parts[11],parts[13]);
+					final String line = String.format("%s %s %s %s %s - %s", nodeid,parts[9],parts[10],parts[11],parts[13]);
 					m.put(new Text(String.format("%d", cur_tld_id)), new Text(String.format("%d", line_cnt)), new Value(line.getBytes()));
 				    }
 
-				    if (rrtypeAggregates == true) {
+				    if (rrtypeAggregates) {
 					// A Record Counter
 					if (rrtype.equals("A")) {
 					    m.put(colf_counts, col_a, v_one);
@@ -554,7 +556,7 @@ public class CrackDnsLog {
 	
 	// http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1
 	boolean isSingle = false;
-	String[] parts = host.split("\\.");
+	String[] parts = host.toLowerCase().split("\\.");
 	int partsLen = parts.length;
 
 	if (partsLen == 0) {
